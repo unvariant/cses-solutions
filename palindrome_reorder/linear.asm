@@ -7,14 +7,14 @@ _start:
     mov     rdx,     buffer_len
     syscall
 
+    lea     rcx,     [rax - 1]
     mov     rdi,     output
-    lea     rcx,     [rsi + rax - 1]
     xor     rax,     rax
 
 bucket_count:
     lodsb
     inc     qword [bucket_start + rax * 8]
-    cmp     rsi,     rcx
+    dec     rcx
     jnz     bucket_count
 
     mov     ecx,     0x5A
@@ -41,7 +41,6 @@ check:
     jl      no_solution
 
     mov     ecx,     25
-    vzeroupper
     vmovdqa ymm7,    yword [alpha_z]
     vmovdqa ymm1,    yword [numeric_one]
 

@@ -52,7 +52,6 @@ check:
     sub     rdi,     32
 
     mov     ecx,     25
-    vzeroupper
     vmovdqa ymm7,    yword [alpha_z]
     vmovdqa ymm1,    yword [numeric_one]
 
