@@ -1,2 +1,9 @@
+# misc intermediate files created by assembler and linker
 **/*.o
 **/*.bin
+
+# crash files created by gitpod
+**/core.*
+
+# macos specific
+**/.DS_Store
