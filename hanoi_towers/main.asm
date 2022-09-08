@@ -20,19 +20,19 @@ _start:
     mov     edx,     buffer_len
     syscall
 
-    lea     rdx,     [rax - 1]
+    lea     edx,     [rax - 1]
     xor     ecx,     ecx
     xor     eax,     eax
 atoi:
-    imul    rcx,     10
+    imul    ecx,     10
     lodsb
-    lea     rcx,     [rax + rcx - 0x30]
-    dec     rdx
+    lea     ecx,     [rax + rcx - 0x30]
+    dec     edx
     jnz     atoi
 
     mov     ebx,     1
-    shl     rbx,     cl
-    dec     rbx
+    shl     ebx,     cl
+    dec     ebx
 
     xor     esi,     esi
     mov     rbp,     0xCCCCCCCCCCCCCCCD
@@ -41,10 +41,10 @@ atoi:
 itoa:
     shl     rsi,     8
     mov     eax,     edx
-    lea     edi,     [edx + 0x30]
+    lea     edi,     [rdx + 0x30]
     mul     rbp
     shr     edx,     3
-    lea     r8d,     [edx * 4 + edx]
+    lea     r8d,     [rdx * 4 + rdx]
     shl     r8d,     1
     sub     edi,     r8d
     or      rsi,     rdi
@@ -66,7 +66,7 @@ itoa:
     mov     rsp,     0xaaaaaaaaaaaaaaab
     lea     r9,      [output + r9 + 1]
 
-    mov     qword [state], rbx
+    mov     dword [state], ebx
 
 ;;; reg | usage                  | default
 ;;; --------------------------------------
@@ -77,9 +77,9 @@ itoa:
 ;;; rdi | previous gray code     | 0
 ;;; rsi | loop iteration + 1     | 1
 ;;; rbp | cycle increment amount | 4 or -1
-;;; rsp | divide by 3 constant   | 0x2aaaaaaaaaaaaaaab
+;;; rsp | divide by 3 constant   | 0xaaaaaaaaaaaaaaab (shift 65)
 ;;; r8  | last cycle index       | 0
-;;; r9  | scratch                | none
+;;; r9  | output buffer          | none
 ;;; r10 | weight                 | none
 ;;; r11 | dst index              | none
 ;;; r12 | src index              | none
@@ -88,24 +88,23 @@ itoa:
 ;;; r15 | scratch                | none
 ;;; --------------------------------------
 
-build:
-    mov     r10,     1
-    mov     rax,     rsi
-    shr     rax,     1
-    xor     rax,     rsi
-    mov     rdx,     rax
-    xor     rax,     rdi
-    tzcnt   rcx,     rax
-    shl     r10,     cl
-    mov     rdi,     rdx
+    mov     eax,     1
+    mov     r10d,    1
 
-    cmp     r10,     1
+build:
+    mov     edx,     eax
+    xor     eax,     edi
+    tzcnt   ecx,     eax
+    mov     edi,     edx
+    shl     r10d,    cl
+
+    cmp     r10d,    1
     jz      .smallest_weight
 
     mov     r13,     qword [state]
     mov     r14,     qword [state + 8]
     mov     r15,     qword [state + 16]
-    lea     rdx,     [r10 * 2 - 1]
+    lea     edx,     [r10 * 2 - 1]
 
     test    r13,     r10
     cmovnz  r12,     qword [numeric_zero]
@@ -124,29 +123,33 @@ build:
     jmp     .next
 
 .smallest_weight:
-    mov     r12,     r8
-    add     r8,      rbp
+    mov     r12d,    r8d
+    add     r8d,     ebp
     cmovs   r8,      qword [numeric_two]
-    mov     rax,     r8
+    mov     eax,     r8d
     mul     rsp
-    shr     rdx,     1
-    lea     rdx,     [rdx + rdx * 2]
-    sub     r8,      rdx
+    shr     edx,     1
+    lea     edx,     [rdx + rdx * 2]
+    sub     r8d,     edx
 
-    mov     r11,     r8
+    mov     r11d,    r8d
 
 .next:
+    inc     esi
+    lea     ecx,     [r12 * 4 + r11]
+    mov     edx,     dword [lookup + rcx * 4]
+    mov     dword [r9], edx
+    mov     eax,     esi
+
     xor     qword [state + r12 * 8], r10
     or      qword [state + r11 * 8], r10
 
-    shl     r12,     2
-    or      r11,     r12
-    mov     eax,     dword [lookup + r11 * 4]
-    mov     dword [r9], eax
+    shr     eax,     1
+    xor     eax,     esi
 
     add     r9,      4
-    inc     rsi
-    dec     rbx
+    mov     r10d,    1
+    dec     ebx
     jnz     build
 
 solution:
