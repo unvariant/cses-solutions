@@ -55,11 +55,12 @@ itoa:
     mov     qword [output], rsi
     mov     byte [output + r9], 0x0A
 
-    mov     ebp,     5
-    test    cl,      1
-    cmovnz  rbp,     rdx
-    dec     rbp
+    mov     rax,     even
+    mov     rsp,     odd
+    test    rcx,     1
+    cmovz   rsp,     rax
 
+    xor     ebp,     ebp
     xor     r8d,     r8d
     xor     edi,     edi
     mov     esi,     1
@@ -76,8 +77,8 @@ itoa:
 ;;; rdx | mask                   | none
 ;;; rdi | previous gray code     | 0
 ;;; rsi | loop iteration + 1     | 1
-;;; rbp | cycle increment amount | 4 or -1
-;;; rsp | divide by 3 constant   | 0xaaaaaaaaaaaaaaab (shift 65)
+;;; rbp | scratch                | none
+;;; rsp | scratch                | none
 ;;; r8  | last cycle index       | 0
 ;;; r9  | output buffer          | none
 ;;; r10 | weight                 | none
@@ -89,22 +90,18 @@ itoa:
 ;;; --------------------------------------
 
     mov     eax,     1
-    mov     r10d,    1
 
 build:
     mov     edx,     eax
     xor     eax,     edi
-    tzcnt   ecx,     eax
-    mov     edi,     edx
-    shl     r10d,    cl
 
-    cmp     r10d,    1
+    cmp     eax,     1
     jz      .smallest_weight
 
     mov     r13,     qword [state]
     mov     r14,     qword [state + 8]
     mov     r15,     qword [state + 16]
-    lea     edx,     [r10 * 2 - 1]
+    lea     edx,     [rax * 2 - 1]
 
     test    r13,     r10
     cmovnz  r12,     qword [numeric_zero]
@@ -124,31 +121,27 @@ build:
 
 .smallest_weight:
     mov     r12d,    r8d
-    add     r8d,     ebp
-    cmovs   r8,      qword [numeric_two]
-    mov     eax,     r8d
-    mul     rsp
-    shr     edx,     1
-    lea     edx,     [rdx + rdx * 2]
-    sub     r8d,     edx
-
-    mov     r11d,    r8d
+    mov     r11d,    dword [rsp + rbp * 8]
+    mov     r8d,     r11d
 
 .next:
+    inc     ebp
     inc     esi
     lea     ecx,     [r12 * 4 + r11]
     mov     edx,     dword [lookup + rcx * 4]
     mov     dword [r9], edx
     mov     eax,     esi
 
-    xor     qword [state + r12 * 8], r10
-    or      qword [state + r11 * 8], r10
+    xor     qword [state + r12 * 8], rax
+    or      qword [state + r11 * 8], rax
 
     shr     eax,     1
     xor     eax,     esi
 
+    cmp     ebp,     3
+    cmovz   ebp,     qword [numeric_zero]
+
     add     r9,      4
-    mov     r10d,    1
     dec     ebx
     jnz     build
 
@@ -177,6 +170,12 @@ output: resb 1000000
     section .data
     align 16
 state: times 3 dq 0
+
+    align 16
+even: dq 1, 2, 0
+
+    align 16
+odd: dq 2, 1, 0
 
     align 16
 lookup:

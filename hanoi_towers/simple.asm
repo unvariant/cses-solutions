@@ -76,7 +76,6 @@ itoa:
     mov     qword [output], rsi
     mov     byte [output + r9], 0x0A
  
-    mov     r8,      0xaaaaaaaaaaaaaaab
     lea     r9,      [output + r9 + 1]
     xor     rdi,     rdi
  
