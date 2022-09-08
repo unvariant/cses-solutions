@@ -85,23 +85,16 @@ itoa:
     test    rcx,     1
     cmovz   r12,     r11
  
-build:
-    mov     rcx,     rdi
-    mov     rax,     rdi
-    mul     r8
-    shr     rdx,     1
-    lea     rdx,     [rdx + rdx * 2]
-    sub     rcx,     rdx
- 
-    mov     eax,     dword [r12 + rcx * 8]
-    mov     edx,     dword [r12 + rcx * 8 + 4]
-
-    inc     rdi
+build: 
+    mov     eax,     dword [r12 + rdi * 8]
+    mov     edx,     dword [r12 + rdi * 8 + 4]
  
     mov     rcx,     qword [state + rax * 8]
     mov     rsi,     qword [state + rdx * 8]
     and     rcx,     0x0F
     and     rsi,     0x0F
+
+    inc     rdi
  
     cmp     esi,     ecx
  
@@ -109,6 +102,9 @@ build:
     cmovl   ebp,     eax
     cmovl   eax,     edx
     cmovl   edx,     ebp
+
+    cmp     rdi,     3
+    cmovz   rdi,     qword [numeric_zero]
  
     shl     qword [state + rdx * 8], 4
     or      qword [state + rdx * 8], rcx
@@ -160,3 +156,6 @@ odd_swap:
     dd 0, 2
     dd 0, 1
     dd 1, 2
+
+    align 16
+numeric_zero: dq 0
