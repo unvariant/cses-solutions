@@ -1,14 +1,14 @@
 # PALINDROME REORDER
 
 1. [Problem](#problem)
-2. [Solution](#solution)
+2. [Solutions](#solutions)
 3. [Code Explanation](#explanation)
 4. [Leaderboard](#standing)
 
 ## Problem <a name="problem"></a>
 ![https://cses.fi/problemset/task/1755](imgs/problem.png)
 
-## Solution <a name="solution"></a>
+## Solutions <a name="solutions"></a>
 In order to build a palindrome, there can only be 0 or 1 characters with an odd occurance count. Otherwise it is impossible to build a palindrome, and instead `"NO SOLUTION"` is outputted.
 
 Once a count of the character occurances is calculated, the palindrome can be built in two different ways.

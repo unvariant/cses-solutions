@@ -64,10 +64,9 @@ itoa:
     xor     r8d,     r8d
     xor     edi,     edi
     mov     esi,     1
-    mov     rsp,     0xaaaaaaaaaaaaaaab
     lea     r9,      [output + r9 + 1]
 
-    mov     dword [state], ebx
+    mov     qword [state], rbx
 
 ;;; reg | usage                  | default
 ;;; --------------------------------------
@@ -89,10 +88,11 @@ itoa:
 ;;; r15 | scratch                | none
 ;;; --------------------------------------
 
-    mov     eax,     1
-
 build:
-    mov     edx,     eax
+    mov     eax,     esi
+    shr     eax,     1
+    xor     eax,     esi
+    mov     ecx,     eax
     xor     eax,     edi
 
     cmp     eax,     1
@@ -103,43 +103,42 @@ build:
     mov     r15,     qword [state + 16]
     lea     edx,     [rax * 2 - 1]
 
-    test    r13,     r10
+    test    r13,     rax
     cmovnz  r12,     qword [numeric_zero]
-    test    r14,     r10
-    cmovnz  r12,     qword [numeric_one]
-    test    r15,     r10
-    cmovnz  r12,     qword [numeric_two]
-
     test    r13,     rdx
     cmovz   r11,     qword [numeric_zero]
+
+    test    r14,     rax
+    cmovnz  r12,     qword [numeric_one]
     test    r14,     rdx
     cmovz   r11,     qword [numeric_one]
+
+    test    r15,     rax
+    cmovnz  r12,     qword [numeric_two]
     test    r15,     rdx
     cmovz   r11,     qword [numeric_two]
 
     jmp     .next
 
 .smallest_weight:
-    mov     r12d,    r8d
     mov     r11d,    dword [rsp + rbp * 8]
+    mov     r12d,    r8d
+    inc     ebp
     mov     r8d,     r11d
+    cmp     ebp,     3
+    cmovz   ebp,     dword [numeric_zero]
 
 .next:
-    inc     ebp
     inc     esi
-    lea     ecx,     [r12 * 4 + r11]
-    mov     edx,     dword [lookup + rcx * 4]
+    mov     edi,     ecx
+
+    mov     edx,     r11d
+    shl     edx,     16
+    lea     edx,     [rdx + r12 + 0x0A312031]
     mov     dword [r9], edx
-    mov     eax,     esi
 
     xor     qword [state + r12 * 8], rax
     or      qword [state + r11 * 8], rax
-
-    shr     eax,     1
-    xor     eax,     esi
-
-    cmp     ebp,     3
-    cmovz   ebp,     qword [numeric_zero]
 
     add     r9,      4
     dec     ebx
@@ -178,33 +177,6 @@ even: dq 1, 2, 0
 odd: dq 2, 1, 0
 
     align 16
-lookup:
-    ascin "bad"
-    ascin "1 2"
-    ascin "1 3"
-    ascin "bad"
-    ascin "2 1"
-    ascin "bad"
-    ascin "2 3"
-    ascin "bad"
-    ascin "3 1"
-    ascin "3 2"
-    ascin "bad"
-    ascin "bad"
-    ascin "bad"
-    ascin "bad"
-    ascin "bad"
-    ascin "bad"
-
-
-    align 16
 numeric_zero: dq 0
 numeric_one: dq 1
 numeric_two: dq 2
-
-;;; 0_1 00_01 1
-;;; 0_2 00_10 2
-;;; 1_0 01_00 4
-;;; 1_2 01_10 6
-;;; 2_0 10_00 8
-;;; 2_1 10_01 9

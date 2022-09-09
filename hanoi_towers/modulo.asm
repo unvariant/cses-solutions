@@ -9,29 +9,8 @@
 %macro ascii 1
     db %1
 %endmacro
- 
- 
-;;; reg | usage                  | default
-;;; --------------------------------------
-;;; rax | src index              | none
-;;; rbx | max loop iterations    | (1 << n) - 1
-;;; rcx | scratch                | none
-;;; rdx | dst index              | none
-;;; rdi | iteration counter      | 0
-;;; rsi | scratch                | none
-;;; rbp | scratch                | none
-;;; rsp | scratch                | none
-;;; r8  | divide by 3 constant   | 0xaaaaaaaaaaaaaaab (shift 65)
-;;; r9  | output buffer          | none
-;;; r10 | scratch                | none
-;;; r11 | scratch                | none
-;;; r12 | scratch                | none
-;;; r13 | scratch                | none
-;;; r14 | scratch                | none
-;;; r15 | scratch                | none
-;;; --------------------------------------
- 
- 
+
+
     global  _start
     section .text
  
@@ -55,10 +34,10 @@ atoi:
     shl     ebx,     cl
     dec     ebx
  
-    xor     esi,     esi
+    mov     esi,     0x0A
     mov     rbp,     0xCCCCCCCCCCCCCCCD
     mov     edx,     ebx
-    xor     r9d,     r9d
+    mov     r9d,     1
 itoa:
     shl     rsi,     8
     mov     eax,     edx
@@ -73,45 +52,43 @@ itoa:
     test    edx,     edx
     jnz     itoa
  
-    mov     qword [output], rsi
-    mov     byte [output + r9], 0x0A
- 
-    lea     r9,      [output + r9 + 1]
-    xor     rdi,     rdi
- 
     mov     r11,     even_swap
     mov     r12,     odd_swap
     test    rcx,     1
     cmovz   r12,     r11
- 
-build: 
+
+    ;mov     qword [output], rsi
+
+    lea     r9,      [output + r9]
+    xor     rdi,     rdi
+    mov     r13,     (4 << 8) | (0)
+
+build:
     mov     eax,     dword [r12 + rdi * 8]
     mov     edx,     dword [r12 + rdi * 8 + 4]
  
-    mov     rcx,     qword [state + rax * 8]
-    mov     rsi,     qword [state + rdx * 8]
-    and     rcx,     0x0F
-    and     rsi,     0x0F
+    bextr   ecx,     dword [state + rax * 8], r13d
+    bextr   esi,     dword [state + rdx * 8], r13d
 
     inc     rdi
  
     cmp     esi,     ecx
+    jge     .next
+
+    xchg    eax,     edx
+    mov     ecx,     esi
  
-    cmovl   ecx,     esi
-    cmovl   ebp,     eax
-    cmovl   eax,     edx
-    cmovl   edx,     ebp
+ .next:
+    shl     qword [state + rdx * 8], 4
+    sar     qword [state + rax * 8], 4
+    or      byte  [state + rdx * 8], cl
 
     cmp     rdi,     3
     cmovz   rdi,     qword [numeric_zero]
  
-    shl     qword [state + rdx * 8], 4
-    or      qword [state + rdx * 8], rcx
-    sar     qword [state + rax * 8], 4
- 
     shl     edx,     16
-    lea     ecx,     [eax + edx + 0x0A312031]
-    mov     dword [r9], ecx
+    lea     esi,     [eax + edx + 0x0A312031]
+    mov     dword [r9], esi
     add     r9,      4
  
     dec     rbx
@@ -141,8 +118,9 @@ output: resb 1000000
  
     section .data
     align 16
-state: dq (0) | (1 << 4) | (2 << 8) | (3 << 12) | (4 << 16) | (5 << 20) | (6 << 24) | (7 << 28) | (8 << 32) | (9 << 36) | (10 << 40) | (11 << 44) | (12 << 48) | (13 << 52) | (14 << 56) | (15 << 60) 
-       dq 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF
+state: dq (0)       | (1 << 4)  | (2 << 8)   | (3 << 12)  |(4 << 16)   | (5 << 20)  | (6 << 24)  | (7 << 28) |\
+          (8 << 32) | (9 << 36) | (10 << 40) | (11 << 44) | (12 << 48) | (13 << 52) | (14 << 56) | (15 << 60) 
+       dq -1, -1
  
     align 16
 even_swap:
