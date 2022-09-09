@@ -25,19 +25,10 @@ There is actually a relationship between the grey code and the tower of hanoi. I
 
 | towers of hanoi | grey code |
 |-----------------|-----------|
-| <pre>0| |<br>1| |<br>-----<br></pre>
-
- | |
-1|0|
------
-
- | |
- |0|1
------
-
- | |0
- | |1
------
+| <pre>0\| \|<br>1\| \|<br>-----<br></pre> | <pre>00 ^ 01 = 01 (bit 0)</pre> |
+| <pre> \| \|<br>1\|0\|<br>-----<br></pre> | <pre>01 ^ 11 = 10 (bit 1)</pre> |
+| <pre> \| \|<br> \|0\|1<br>-----<br></pre> | <pre>11 ^ 10 = 01 (bit 0)</pre> |
+| <pre> \| \|0<br> \| \|1<br>-----<br></pre> | <pre>done</pre> |
 
 ## Leaderboard
 ![https://cses.fi/problemset/stats/2165/](imgs/standings.png)
